@@ -85,19 +85,28 @@ export default async function handler(req, res) {
 
   for (const cat of CATS) {
     try {
-      const apiRes = await fetch(ANTHROPIC_API, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: SONNET, max_tokens: 16000, system: SYS,
-          messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.` }],
-          tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-        }),
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 150000);
+
+      let apiRes;
+      try {
+        apiRes = await fetch(ANTHROPIC_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: SONNET, max_tokens: 16000, system: SYS,
+            messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.` }],
+            tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+          }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (!apiRes.ok) {
         const err = await apiRes.text().catch(() => '');
@@ -116,20 +125,21 @@ export default async function handler(req, res) {
 
       stories.forEach(s => { s.addedAt = now; });
       briefing.categories[cat.id] = { id: cat.id, stories };
+
+      // Save incrementally after each successful category
+      await put('clarity-briefing.json', JSON.stringify(briefing), {
+        access: 'public',
+        addRandomSuffix: false,
+        allowOverwrite: true,
+        contentType: 'application/json',
+      });
+
       results.push({ cat: cat.id, stories: stories.length });
 
     } catch (e) {
-      results.push({ cat: cat.id, error: e.message });
+      results.push({ cat: cat.id, error: e.name === 'AbortError' ? 'Timed out (150s)' : e.message });
     }
   }
-
-  // Save complete briefing
-  await put('clarity-briefing.json', JSON.stringify(briefing), {
-    access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
-    contentType: 'application/json',
-  });
 
   return res.status(200).json({ success: true, results });
 }
