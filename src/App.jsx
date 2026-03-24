@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Strip citation tags from API output
 const strip = (text) => {
@@ -185,15 +185,10 @@ export default function Clarity() {
   const [briefing, setBriefing] = useState(null);
   const [cat, setCat] = useState("breaking");
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshStatus, setRefreshStatus] = useState("");
   const [err, setErr] = useState(null);
   const [view, setView] = useState("feed");
   const [selected, setSelected] = useState(null);
   const [, forceUpdate] = useState(0);
-  const [showPassPrompt, setShowPassPrompt] = useState(false);
-  const [passInput, setPassInput] = useState("");
-  const [passErr, setPassErr] = useState(false);
 
   useEffect(() => {
     fetch("/api/briefing")
@@ -216,33 +211,6 @@ export default function Clarity() {
     const d = new Date(iso);
     return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short" });
   };
-
-  // Manual refresh — one category at a time with 60s pause
-  const doRefresh = useCallback(async () => {
-    setRefreshing(true); setErr(null);
-    const cats = ["breaking", "world", "business", "energy", "tech"];
-    for (let i = 0; i < cats.length; i++) {
-      setRefreshStatus(`${cats[i]} (${i + 1}/${cats.length})`);
-      try {
-        const r = await fetch(`/api/cron?cat=${cats[i]}&key=clarity2026`);
-        const data = await r.json();
-        if (data.error) { setErr(`${cats[i]}: ${data.error}`); continue; }
-      } catch (e) {
-        setErr(`${cats[i]}: ${e.message}`); continue;
-      }
-      try {
-        const b = await fetch("/api/briefing");
-        const bData = await b.json();
-        if (!bData.error) setBriefing(strip(bData));
-      } catch {}
-      if (i < cats.length - 1) {
-        setRefreshStatus(`pausing before ${cats[i+1]} (${i + 2}/${cats.length})`);
-        await new Promise(resolve => setTimeout(resolve, 60000));
-      }
-    }
-    setRefreshStatus("");
-    setRefreshing(false);
-  }, []);
 
   const handleStoryTap = (s) => {
     markRead(s.hl);
@@ -279,53 +247,13 @@ export default function Clarity() {
           <span style={{ fontFamily: "var(--display)", fontSize: 22, color: "var(--t1)" }}>Clarity</span>
           <span style={{ fontFamily: "var(--display)", fontSize: 15, color: "#C8AA78", fontStyle: "italic" }}>Briefed, not fed.</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {fetchedAt && (
             <span style={{ fontSize: 10, color: "var(--t4)", fontFamily: "var(--mono)" }}>
               {formatTime(fetchedAt)}
             </span>
           )}
-          <button onClick={() => { setPassInput(""); setPassErr(false); setShowPassPrompt(true); }} disabled={refreshing} style={{
-            background: refreshing ? "var(--c2)" : "rgba(200,170,120,0.12)",
-            color: refreshing ? "var(--t4)" : "#C8AA78",
-            border: "none", borderRadius: 6, padding: "6px 10px", cursor: refreshing ? "not-allowed" : "pointer",
-            fontSize: 11, fontWeight: 700, fontFamily: "var(--mono)",
-          }}>
-            <span style={{ display: "inline-block", animation: refreshing ? "spin 1s linear infinite" : "none", fontSize: 13 }}>↻</span>
-          </button>
         </div>
       </header>
-
-      {/* PASSWORD PROMPT */}
-      {showPassPrompt && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
-          <div style={{ background: "var(--bg)", border: "1px solid var(--c1)", borderRadius: 12, padding: "24px 20px", width: 280, fontFamily: "var(--mono)" }}>
-            <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 16 }}>Enter refresh password</div>
-            <input
-              autoFocus
-              type="password"
-              value={passInput}
-              onChange={e => { setPassInput(e.target.value); setPassErr(false); }}
-              onKeyDown={e => {
-                if (e.key === "Enter") {
-                  if (passInput === "acb151") { setShowPassPrompt(false); doRefresh(); }
-                  else setPassErr(true);
-                }
-                if (e.key === "Escape") setShowPassPrompt(false);
-              }}
-              style={{ width: "100%", background: "var(--c2)", border: passErr ? "1px solid #EF4444" : "1px solid var(--c1)", borderRadius: 6, padding: "8px 10px", color: "var(--t1)", fontSize: 14, fontFamily: "var(--mono)", boxSizing: "border-box", outline: "none" }}
-            />
-            {passErr && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 6 }}>Incorrect password</div>}
-            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-              <button onClick={() => setShowPassPrompt(false)} style={{ flex: 1, background: "var(--c2)", border: "none", borderRadius: 6, padding: "8px", color: "var(--t3)", cursor: "pointer", fontSize: 12, fontFamily: "var(--mono)" }}>Cancel</button>
-              <button onClick={() => {
-                if (passInput === "acb151") { setShowPassPrompt(false); doRefresh(); }
-                else setPassErr(true);
-              }} style={{ flex: 1, background: "rgba(200,170,120,0.15)", border: "none", borderRadius: 6, padding: "8px", color: "#C8AA78", cursor: "pointer", fontSize: 12, fontFamily: "var(--mono)", fontWeight: 700 }}>Refresh</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* PILLS */}
       <div style={{ padding: "10px 20px", display: "flex", gap: 6, flexShrink: 0, borderBottom: "1px solid var(--c1)" }}>
@@ -359,15 +287,7 @@ export default function Clarity() {
           </div>
         )}
 
-        {/* Refreshing */}
-        {refreshing && (
-          <div style={{ textAlign: "center", padding: "72px 16px" }}>
-            <div style={{ width: 32, height: 32, border: "2px solid var(--c1)", borderTopColor: "#C8AA78", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
-            <div style={{ fontSize: 15, color: "var(--t3)", fontFamily: "var(--mono)" }}>{refreshStatus ? `Fetching ${refreshStatus}` : "Starting refresh..."}</div>
-          </div>
-        )}
-
-        {err && !loading && !refreshing && (
+        {err && !loading && (
           <div style={{ background: "rgba(239,68,68,0.06)", borderRadius: 8, padding: "10px 14px", margin: "10px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <p style={{ fontSize: 9, color: "#EF4444", margin: 0, lineHeight: 1.4, fontFamily: "var(--mono)", flex: 1 }}>{err}</p>
             <button onClick={() => setErr(null)} style={{ background: "none", border: "none", color: "#EF4444", cursor: "pointer", fontSize: 14, padding: "0 0 0 10px", flexShrink: 0 }}>✕</button>
@@ -375,7 +295,7 @@ export default function Clarity() {
         )}
 
         {/* FEED */}
-        {!loading && !refreshing && view === "feed" && cat && (
+        {!loading && view === "feed" && cat && (
           stories.length > 0 ? (
             <div style={{ padding: "12px 0", animation: "fadeIn .3s ease" }}>
               {stories.map((s, i) => {
