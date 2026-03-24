@@ -252,7 +252,6 @@ export default function Clarity() {
               {formatTime(fetchedAt)}
             </span>
           )}
-        </div>
       </header>
 
       {/* PILLS */}
