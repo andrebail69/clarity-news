@@ -97,6 +97,49 @@ export async function saveBriefing(data) {
   });
 }
 
+const BREAKING_SYS = `You are an intelligence briefing service. Your job is to present what is true, what is connected, what is unresolved, and what would resolve it. You have no opinion. You have no editorial voice. You simply present the complete picture and let the reader decide.
+
+Return 5 stories as a JSON array with four layers.
+
+STORY SELECTION: These are the 5 most significant breaking or urgent news stories happening RIGHT NOW, spanning any topic — geopolitics, international events, US and global politics, business, markets, energy, technology. Every story must have had a major development in the last 24 hours. Choose the most consequential things happening today. Set "stage" to "breaking" for ALL stories.
+
+LAYER 1 — FACTS ("facts" field): Array of 5-8 undeniable, verifiable facts. No interpretation, no framing, no adjectives. Dates, numbers, named actions, confirmed events only.
+
+LAYER 2 — THE FULL STORY ("story" field): 4-5 substantial paragraphs connecting the facts into the complete picture. Write for a smart, curious reader who wants depth. Do NOT editorialize. Write as continuous text with paragraph breaks as double newlines.
+
+LAYER 3 — OPEN QUESTIONS ("questions" field): Array of 2-3 genuinely unresolved questions. Each is an object:
+- "question": The question stated plainly
+- "why": One substantial paragraph on why this is unresolved.
+
+LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable indicators. Each is an object:
+- "indicator": A specific event, data release, decision to watch for
+- "meaning": 2-3 sentences on what it would tell you.
+
+RULES:
+- No editorializing. No opinion. No bias. Present facts and connections.
+- Do NOT include any citation markup, cite tags, or reference annotations. Clean plain text only.
+- The story field must be genuinely thorough — 4-5 real paragraphs.
+- Return ONLY a valid JSON array. No markdown. No backticks. No preamble.
+
+[
+  {
+    "hl": "Precise factual headline",
+    "sum": "2 sentence summary",
+    "sev": "critical|significant|notable|routine",
+    "fq": "verified|likely|developing|contested|editorial",
+    "stage": "breaking",
+    "src": "Source outlets comma separated",
+    "facts": ["Fact 1", "Fact 2"],
+    "story": "Paragraph 1\\n\\nParagraph 2\\n\\nParagraph 3\\n\\nParagraph 4",
+    "questions": [
+      {"question": "The question", "why": "Why it's unresolved"}
+    ],
+    "resolution": [
+      {"indicator": "Thing to watch", "meaning": "What it tells you"}
+    ]
+  }
+]`;
+
 export { extractJSON, ANTHROPIC_API, SONNET, CATS };
 
 export default async function handler(req, res) {
@@ -106,24 +149,30 @@ export default async function handler(req, res) {
   }
 
   const catId = req.query.cat;
-  if (!catId || !CATS[catId]) {
+  if (!catId || (catId !== 'breaking' && !CATS[catId])) {
     return res.status(400).json({ error: 'Missing or invalid ?cat= parameter' });
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'No API key configured' });
 
-  const cat = CATS[catId];
   const today = new Date().toISOString().split('T')[0];
-
-  // Collect headlines from all other categories to prevent overlap
   const existing = await loadExisting();
-  const otherHeadlines = Object.entries(existing.categories || {})
-    .filter(([id]) => id !== catId)
+
+  // Breaking is its own category — no overlap check needed, different prompt
+  const isBreaking = catId === 'breaking';
+  const cat = isBreaking ? null : CATS[catId];
+
+  const otherHeadlines = isBreaking ? [] : Object.entries(existing.categories || {})
+    .filter(([id]) => id !== catId && id !== 'breaking')
     .flatMap(([, c]) => (c.stories || []).map(s => s.hl).filter(Boolean));
   const noOverlap = otherHeadlines.length > 0
     ? `\n\nALREADY COVERED IN OTHER CATEGORIES — do not duplicate these stories: ${otherHeadlines.join(' | ')}`
     : '';
+
+  const userMsg = isBreaking
+    ? `The 5 most significant breaking news stories happening right now across all topics. Today: ${today}. Search the web for the latest. Return the JSON array with all fields filled in thoroughly.`
+    : `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}`;
 
   try {
     const apiRes = await fetch(ANTHROPIC_API, {
@@ -134,8 +183,8 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: SONNET, max_tokens: 16000, system: SYS,
-        messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}` }],
+        model: SONNET, max_tokens: 16000, system: isBreaking ? BREAKING_SYS : SYS,
+        messages: [{ role: 'user', content: userMsg }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     });
@@ -154,9 +203,8 @@ export default async function handler(req, res) {
     }
 
     const now = new Date().toISOString();
-    stories.forEach(s => { s.addedAt = now; });
+    stories.forEach(s => { s.addedAt = now; if (isBreaking) s.stage = 'breaking'; });
 
-    const existing = await loadExisting();
     existing.categories[catId] = { id: catId, stories };
     existing.fetchedAt = now;
     existing.date = today;

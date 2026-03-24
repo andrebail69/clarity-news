@@ -4,6 +4,7 @@ const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const SONNET = 'claude-sonnet-4-20250514';
 
 const CATS = [
+  { id: 'breaking', label: 'Breaking', isBreaking: true },
   { id: 'world', label: 'World', q: 'international geopolitics diplomacy conflict US and global politics policy legislation' },
   { id: 'business', label: 'Business', q: 'business corporate markets finance deals' },
   { id: 'energy', label: 'Energy', q: 'energy oil gas OPEC commodities renewables' },
@@ -59,6 +60,49 @@ RULES:
   }
 ]`;
 
+const BREAKING_SYS = `You are an intelligence briefing service. Your job is to present what is true, what is connected, what is unresolved, and what would resolve it. You have no opinion. You have no editorial voice. You simply present the complete picture and let the reader decide.
+
+Return 5 stories as a JSON array with four layers.
+
+STORY SELECTION: These are the 5 most significant breaking or urgent news stories happening RIGHT NOW, spanning any topic — geopolitics, international events, US and global politics, business, markets, energy, technology. Every story must have had a major development in the last 24 hours. Set "stage" to "breaking" for ALL stories.
+
+LAYER 1 — FACTS ("facts" field): Array of 5-8 undeniable, verifiable facts. No interpretation, no framing, no adjectives. Dates, numbers, named actions, confirmed events only.
+
+LAYER 2 — THE FULL STORY ("story" field): 4-5 substantial paragraphs connecting the facts into the complete picture. Write for a smart, curious reader who wants depth. Do NOT editorialize. Write as continuous text with paragraph breaks as double newlines.
+
+LAYER 3 — OPEN QUESTIONS ("questions" field): Array of 2-3 genuinely unresolved questions. Each is an object:
+- "question": The question stated plainly
+- "why": One substantial paragraph on why this is unresolved.
+
+LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable indicators. Each is an object:
+- "indicator": A specific event, data release, decision to watch for
+- "meaning": 2-3 sentences on what it would tell you.
+
+RULES:
+- No editorializing. No opinion. No bias. Present facts and connections.
+- Do NOT include any citation markup, cite tags, or reference annotations. Clean plain text only.
+- The story field must be genuinely thorough — 4-5 real paragraphs.
+- Return ONLY a valid JSON array. No markdown. No backticks. No preamble.
+
+[
+  {
+    "hl": "Precise factual headline",
+    "sum": "2 sentence summary",
+    "sev": "critical|significant|notable|routine",
+    "fq": "verified|likely|developing|contested|editorial",
+    "stage": "breaking",
+    "src": "Source outlets comma separated",
+    "facts": ["Fact 1", "Fact 2"],
+    "story": "Paragraph 1\\n\\nParagraph 2\\n\\nParagraph 3\\n\\nParagraph 4",
+    "questions": [
+      {"question": "The question", "why": "Why it's unresolved"}
+    ],
+    "resolution": [
+      {"indicator": "Thing to watch", "meaning": "What it tells you"}
+    ]
+  }
+]`;
+
 function extractJSON(text) {
   if (!text || !text.trim()) return null;
   let clean = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim();
@@ -92,9 +136,13 @@ export default async function handler(req, res) {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000);
 
-      const noOverlap = usedHeadlines.length > 0
+      const noOverlap = (!cat.isBreaking && usedHeadlines.length > 0)
         ? `\n\nALREADY COVERED IN OTHER CATEGORIES — do not duplicate these stories: ${usedHeadlines.join(' | ')}`
         : '';
+
+      const userMsg = cat.isBreaking
+        ? `The 5 most significant breaking news stories happening right now across all topics. Today: ${today}. Search the web for the latest. Return the JSON array with all fields filled in thoroughly.`
+        : `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}`;
 
       let apiRes;
       try {
@@ -106,8 +154,8 @@ export default async function handler(req, res) {
             'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
-            model: SONNET, max_tokens: 16000, system: SYS,
-            messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}` }],
+            model: SONNET, max_tokens: 16000, system: cat.isBreaking ? BREAKING_SYS : SYS,
+            messages: [{ role: 'user', content: userMsg }],
             tools: [{ type: 'web_search_20250305', name: 'web_search' }],
           }),
           signal: controller.signal,
@@ -131,9 +179,9 @@ export default async function handler(req, res) {
         continue;
       }
 
-      stories.forEach(s => { s.addedAt = now; });
+      stories.forEach(s => { s.addedAt = now; if (cat.isBreaking) s.stage = 'breaking'; });
       briefing.categories[cat.id] = { id: cat.id, stories };
-      stories.forEach(s => { if (s.hl) usedHeadlines.push(s.hl); });
+      if (!cat.isBreaking) stories.forEach(s => { if (s.hl) usedHeadlines.push(s.hl); });
 
       // Save incrementally after each successful category
       await put('clarity-briefing.json', JSON.stringify(briefing), {

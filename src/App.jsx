@@ -206,11 +206,8 @@ export default function Clarity() {
       .catch(e => { setErr(e.message); setLoading(false); });
   }, []);
 
-  const breakingStories = Object.values(briefing?.categories || {})
-    .flatMap(c => (c.stories || []).filter(s => s.stage === "breaking"))
-    .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
   const stories = cat === "breaking"
-    ? breakingStories
+    ? (briefing?.categories?.breaking?.stories || [])
     : (cat && briefing?.categories?.[cat]?.stories) || [];
   const fetchedAt = briefing?.fetchedAt;
 
@@ -223,7 +220,7 @@ export default function Clarity() {
   // Manual refresh — one category at a time with 60s pause
   const doRefresh = useCallback(async () => {
     setRefreshing(true); setErr(null);
-    const cats = ["world", "business", "energy", "tech"];
+    const cats = ["breaking", "world", "business", "energy", "tech"];
     for (let i = 0; i < cats.length; i++) {
       setRefreshStatus(`${cats[i]} (${i + 1}/${cats.length})`);
       try {

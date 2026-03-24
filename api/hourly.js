@@ -169,12 +169,13 @@ OR
         continue;
       }
 
-      // Add timestamp and prepend to existing stories
+      // Add timestamp and prepend to breaking category
       const now = new Date().toISOString();
       newStories[0].addedAt = now;
       newStories[0].stage = 'breaking';
 
-      existing.categories[catId].stories = [newStories[0], ...currentStories];
+      const breakingStories = existing.categories?.breaking?.stories || [];
+      existing.categories.breaking = { id: 'breaking', stories: [newStories[0], ...breakingStories] };
       existing.fetchedAt = now;
 
       results.push({ cat: catId, breaking: true, headline: check.headline });
