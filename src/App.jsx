@@ -244,8 +244,8 @@ export default function Clarity() {
       {/* HEADER */}
       <header style={{ padding: "14px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid var(--c1)", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 10 }}>
-          <span style={{ fontFamily: "var(--display)", fontSize: 22, color: "var(--t1)" }}>Clarity</span>
-          <span style={{ fontFamily: "var(--display)", fontSize: 15, color: "#C8AA78", fontStyle: "italic" }}>Briefed, not fed.</span>
+          <span style={{ fontFamily: "var(--display)", fontSize: 30, color: "var(--t1)" }}>Clarity</span>
+          <span style={{ fontFamily: "var(--display)", fontSize: 20, color: "#C8AA78", fontStyle: "italic" }}>Briefed, not fed.</span>
         </div>
           {fetchedAt && (
             <span style={{ fontSize: 10, color: "var(--t4)", fontFamily: "var(--mono)" }}>
