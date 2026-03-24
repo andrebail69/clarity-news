@@ -7,7 +7,7 @@
       "maxDuration": 300
     },
     "api/daily.js": {
-      "maxDuration": 900
+      "maxDuration": 800
     },
     "api/hourly.js": {
       "maxDuration": 300

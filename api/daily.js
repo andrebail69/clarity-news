@@ -86,7 +86,7 @@ export default async function handler(req, res) {
   for (const cat of CATS) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 150000);
+      const timeout = setTimeout(() => controller.abort(), 120000);
 
       let apiRes;
       try {
