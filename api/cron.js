@@ -4,8 +4,7 @@ const ANTHROPIC_API = 'https://api.anthropic.com/v1/messages';
 const SONNET = 'claude-sonnet-4-20250514';
 
 const CATS = {
-  world: { label: 'World', q: 'international geopolitics diplomacy conflict' },
-  politics: { label: 'Politics', q: 'US and global politics policy election legislation' },
+  world: { label: 'World', q: 'international geopolitics diplomacy conflict US and global politics policy legislation' },
   business: { label: 'Business', q: 'business corporate markets finance deals' },
   energy: { label: 'Energy', q: 'energy oil gas OPEC commodities renewables' },
   tech: { label: 'Tech', q: 'technology AI big tech startups regulation' },

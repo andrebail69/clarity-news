@@ -33,7 +33,6 @@ const isNew = (story) => {
 
 const CATS = [
   { id: "world", label: "World" },
-  { id: "politics", label: "Politics" },
   { id: "business", label: "Business" },
   { id: "energy", label: "Energy" },
   { id: "tech", label: "Tech" },
@@ -207,7 +206,12 @@ export default function Clarity() {
       .catch(e => { setErr(e.message); setLoading(false); });
   }, []);
 
-  const stories = (cat && briefing?.categories?.[cat]?.stories) || [];
+  const breakingStories = Object.values(briefing?.categories || {})
+    .flatMap(c => (c.stories || []).filter(s => s.stage === "breaking"))
+    .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt));
+  const stories = cat === "breaking"
+    ? breakingStories
+    : (cat && briefing?.categories?.[cat]?.stories) || [];
   const fetchedAt = briefing?.fetchedAt;
 
   const formatTime = (iso) => {
@@ -219,7 +223,7 @@ export default function Clarity() {
   // Manual refresh — one category at a time with 60s pause
   const doRefresh = useCallback(async () => {
     setRefreshing(true); setErr(null);
-    const cats = ["world", "politics", "business", "energy", "tech"];
+    const cats = ["world", "business", "energy", "tech"];
     for (let i = 0; i < cats.length; i++) {
       setRefreshStatus(`${cats[i]} (${i + 1}/${cats.length})`);
       try {
@@ -328,6 +332,14 @@ export default function Clarity() {
 
       {/* PILLS */}
       <div style={{ padding: "10px 20px", display: "flex", gap: 6, flexShrink: 0, borderBottom: "1px solid var(--c1)" }}>
+        <button onClick={() => { setCat("breaking"); setView("feed"); setSelected(null); setErr(null); }} style={{
+          flex: 1,
+          background: cat === "breaking" ? "#EF4444" : "var(--c2)",
+          color: cat === "breaking" ? "#fff" : "#EF4444",
+          border: "none", borderRadius: 20, padding: "8px 0", cursor: "pointer",
+          fontSize: 15, fontWeight: cat === "breaking" ? 700 : 400,
+          fontFamily: "var(--body)", whiteSpace: "nowrap", textAlign: "center",
+        }}>Breaking</button>
         {CATS.map(c => (
           <button key={c.id} onClick={() => { setCat(c.id); setView("feed"); setSelected(null); setErr(null); }} style={{
             flex: 1,
@@ -401,8 +413,8 @@ export default function Clarity() {
             </div>
           ) : briefing && (
             <div style={{ textAlign: "center", padding: "60px 16px" }}>
-              <p style={{ fontSize: 14, color: "var(--t3)" }}>No stories for this category yet.</p>
-              <p style={{ fontSize: 10, color: "var(--t4)" }}>Stories update daily at 6:00 AM ET.</p>
+              <p style={{ fontSize: 14, color: "var(--t3)" }}>{cat === "breaking" ? "No breaking news right now." : "No stories for this category yet."}</p>
+              <p style={{ fontSize: 10, color: "var(--t4)" }}>{cat === "breaking" ? "Checked hourly 7am–9pm ET." : "Stories update daily at 6:00 AM ET."}</p>
             </div>
           )
         )}
