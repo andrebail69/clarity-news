@@ -183,7 +183,7 @@ function StoryScreen({ story: s, onBack }) {
 // ─── Main App ──────────────────────────────────────────────────────────
 export default function Clarity() {
   const [briefing, setBriefing] = useState(null);
-  const [cat, setCat] = useState("world");
+  const [cat, setCat] = useState("breaking");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshStatus, setRefreshStatus] = useState("");
