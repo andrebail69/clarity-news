@@ -136,7 +136,10 @@ export default async function handler(req, res) {
   const results = [];
   const usedHeadlines = [];
 
+  console.log(`[daily] Starting full refresh for ${today}`);
+
   for (const cat of CATS) {
+    console.log(`[daily] Fetching category: ${cat.id}`);
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000);
@@ -196,12 +199,16 @@ export default async function handler(req, res) {
         contentType: 'application/json',
       });
 
+      console.log(`[daily] ✓ ${cat.id}: ${stories.length} stories saved`);
       results.push({ cat: cat.id, stories: stories.length });
 
     } catch (e) {
-      results.push({ cat: cat.id, error: e.name === 'AbortError' ? 'Timed out (150s)' : e.message });
+      const err = e.name === 'AbortError' ? 'Timed out (120s)' : e.message;
+      console.log(`[daily] ✗ ${cat.id}: ${err}`);
+      results.push({ cat: cat.id, error: err });
     }
   }
 
+  console.log(`[daily] Done. Results: ${JSON.stringify(results)}`);
   return res.status(200).json({ success: true, results });
 }
