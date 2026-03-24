@@ -86,11 +86,16 @@ export default async function handler(req, res) {
   const now = new Date().toISOString();
   const briefing = { fetchedAt: now, date: today, categories: {} };
   const results = [];
+  const usedHeadlines = [];
 
   for (const cat of CATS) {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 120000);
+
+      const noOverlap = usedHeadlines.length > 0
+        ? `\n\nALREADY COVERED IN OTHER CATEGORIES — do not duplicate these stories: ${usedHeadlines.join(' | ')}`
+        : '';
 
       let apiRes;
       try {
@@ -103,7 +108,7 @@ export default async function handler(req, res) {
           },
           body: JSON.stringify({
             model: SONNET, max_tokens: 16000, system: SYS,
-            messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.` }],
+            messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}` }],
             tools: [{ type: 'web_search_20250305', name: 'web_search' }],
           }),
           signal: controller.signal,
@@ -129,6 +134,7 @@ export default async function handler(req, res) {
 
       stories.forEach(s => { s.addedAt = now; });
       briefing.categories[cat.id] = { id: cat.id, stories };
+      stories.forEach(s => { if (s.hl) usedHeadlines.push(s.hl); });
 
       // Save incrementally after each successful category
       await put('clarity-briefing.json', JSON.stringify(briefing), {

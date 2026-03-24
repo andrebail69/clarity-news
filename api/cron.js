@@ -117,6 +117,15 @@ export default async function handler(req, res) {
   const cat = CATS[catId];
   const today = new Date().toISOString().split('T')[0];
 
+  // Collect headlines from all other categories to prevent overlap
+  const existing = await loadExisting();
+  const otherHeadlines = Object.entries(existing.categories || {})
+    .filter(([id]) => id !== catId)
+    .flatMap(([, c]) => (c.stories || []).map(s => s.hl).filter(Boolean));
+  const noOverlap = otherHeadlines.length > 0
+    ? `\n\nALREADY COVERED IN OTHER CATEGORIES — do not duplicate these stories: ${otherHeadlines.join(' | ')}`
+    : '';
+
   try {
     const apiRes = await fetch(ANTHROPIC_API, {
       method: 'POST',
@@ -127,7 +136,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: SONNET, max_tokens: 16000, system: SYS,
-        messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.` }],
+        messages: [{ role: 'user', content: `The 5 ${cat.label.toLowerCase()} stories that informed professionals need to know right now. Focus: ${cat.q}. Today: ${today}. Search the web for current stories. Return the JSON array with all fields filled in thoroughly.${noOverlap}` }],
         tools: [{ type: 'web_search_20250305', name: 'web_search' }],
       }),
     });
