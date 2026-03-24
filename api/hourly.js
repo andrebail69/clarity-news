@@ -79,19 +79,19 @@ export default async function handler(req, res) {
   const existing = await loadExisting();
   const results = [];
 
+  // Cap: max 10 hourly-added breaking stories per day total
+  const breakingToday = (existing.categories?.breaking?.stories || [])
+    .filter(s => s.addedAt && s.addedAt.startsWith(today)).length;
+  if (breakingToday >= 10) {
+    return res.status(200).json({ success: true, skipped: 'daily breaking cap reached (10/day)', results: [] });
+  }
+
   for (const [catId, cat] of Object.entries(CATS)) {
     const currentStories = existing.categories?.[catId]?.stories || [];
     const currentHeadlines = currentStories.map(s => s.hl).join(' | ');
 
     if (!currentHeadlines) {
       results.push({ cat: catId, skipped: 'no existing stories' });
-      continue;
-    }
-
-    // Cap: max 3 breaking stories per category per day
-    const breakingToday = currentStories.filter(s => s.stage === 'breaking' && s.addedAt && s.addedAt.startsWith(today)).length;
-    if (breakingToday >= 3) {
-      results.push({ cat: catId, skipped: 'breaking cap reached (3/day)' });
       continue;
     }
 
