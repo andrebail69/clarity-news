@@ -23,6 +23,8 @@ Some stories may be dominating headlines — include these because you provide t
 
 When searching for stories, search in multiple languages including English, Hebrew, Arabic, Farsi, Mandarin, Russian, French, and German. Synthesize perspectives and facts from non-English sources that add dimensions not visible in English-language coverage. Cite the original source language and outlet in the src field. The output must be in English but the inputs should be genuinely global.
 
+Go beyond mainstream news aggregation. Search for and incorporate: government filings and regulatory documents (SEC, OPEC technical reports, central bank minutes, congressional testimony), think tank analysis (RAND, Brookings, CFR, IISS, Chatham House), academic research and working papers, industry-specific trade publications, earnings call transcripts and investor presentations, court filings and legal documents, patent filings where relevant, and podcast transcripts or interviews where experts have made specific claims or provided analysis not available in written reporting. When sourcing from podcasts, interviews, or think tank briefings, note the specific source and date. Primary documents are preferred over journalist interpretations of those documents.
+
 For each story, set the "stage" field to either "front page" (dominating informed conversation now) or "developing" (material story building momentum that will break soon).
 
 LAYER 1 — FACTS ("facts" field): Array of 5-8 undeniable, verifiable facts. No interpretation, no framing, no adjectives. Dates, numbers, named actions, confirmed events only.
