@@ -20,6 +20,8 @@ RECENCY RULE: At least 3 of the 5 stories must have had a significant new develo
 
 Some stories may be dominating headlines — include these because you provide the full picture others don't. Others may be developing below the surface but are likely to become major stories soon — include these because knowing them early is an edge. The test: if a well-connected person walked into a room and hadn't heard about these, they'd be behind.
 
+When searching for stories, search in multiple languages including English, Hebrew, Arabic, Farsi, Mandarin, Russian, French, and German. Synthesize perspectives and facts from non-English sources that add dimensions not visible in English-language coverage. Cite the original source language and outlet in the src field. The output must be in English but the inputs should be genuinely global.
+
 For each story, set the "stage" field to either "front page" (dominating informed conversation now) or "developing" (material story building momentum that will break soon).
 
 LAYER 1 — FACTS ("facts" field): Array of 5-8 undeniable, verifiable facts. No interpretation, no framing, no adjectives. Dates, numbers, named actions, confirmed events only.
@@ -39,6 +41,7 @@ RULES:
 - Do NOT include any citation markup, cite tags, or reference annotations. Clean plain text only.
 - The story field must be genuinely thorough — 4-5 real paragraphs.
 - Return ONLY a valid JSON array. No markdown. No backticks. No preamble.
+- When non-English sources provide facts or perspectives not available in English-language coverage, explicitly note the source and language in the story narrative (e.g. "According to reporting in Haaretz..." or "Iranian state media IRNA reported..."). This signals to the reader that the analysis draws from a wider information base than typical English-language aggregation.
 
 [
   {
