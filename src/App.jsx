@@ -317,7 +317,12 @@ export default function Clarity() {
         )}
 
         {/* Refreshing */}
-        {refreshing && <Loader label={refreshStatus ? `Fetching ${refreshStatus}` : "Starting refresh"} />}
+        {refreshing && (
+          <div style={{ textAlign: "center", padding: "72px 16px" }}>
+            <div style={{ width: 32, height: 32, border: "2px solid var(--c1)", borderTopColor: "#C8AA78", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
+            <div style={{ fontSize: 15, color: "var(--t3)", fontFamily: "var(--mono)" }}>{refreshStatus ? `Fetching ${refreshStatus}` : "Starting refresh..."}</div>
+          </div>
+        )}
 
         {err && !loading && !refreshing && (
           <div style={{ background: "rgba(239,68,68,0.06)", borderRadius: 8, padding: "10px 14px", margin: "10px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
