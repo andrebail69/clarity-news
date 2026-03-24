@@ -192,6 +192,9 @@ export default function Clarity() {
   const [view, setView] = useState("feed");
   const [selected, setSelected] = useState(null);
   const [, forceUpdate] = useState(0);
+  const [showPassPrompt, setShowPassPrompt] = useState(false);
+  const [passInput, setPassInput] = useState("");
+  const [passErr, setPassErr] = useState(false);
 
   useEffect(() => {
     fetch("/api/briefing")
@@ -281,7 +284,7 @@ export default function Clarity() {
               {formatTime(fetchedAt)}
             </span>
           )}
-          <button onClick={doRefresh} disabled={refreshing} style={{
+          <button onClick={() => { setPassInput(""); setPassErr(false); setShowPassPrompt(true); }} disabled={refreshing} style={{
             background: refreshing ? "var(--c2)" : "rgba(200,170,120,0.12)",
             color: refreshing ? "var(--t4)" : "#C8AA78",
             border: "none", borderRadius: 6, padding: "6px 10px", cursor: refreshing ? "not-allowed" : "pointer",
@@ -291,6 +294,37 @@ export default function Clarity() {
           </button>
         </div>
       </header>
+
+      {/* PASSWORD PROMPT */}
+      {showPassPrompt && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999 }}>
+          <div style={{ background: "var(--bg)", border: "1px solid var(--c1)", borderRadius: 12, padding: "24px 20px", width: 280, fontFamily: "var(--mono)" }}>
+            <div style={{ fontSize: 13, color: "var(--t2)", marginBottom: 16 }}>Enter refresh password</div>
+            <input
+              autoFocus
+              type="password"
+              value={passInput}
+              onChange={e => { setPassInput(e.target.value); setPassErr(false); }}
+              onKeyDown={e => {
+                if (e.key === "Enter") {
+                  if (passInput === "acb151") { setShowPassPrompt(false); doRefresh(); }
+                  else setPassErr(true);
+                }
+                if (e.key === "Escape") setShowPassPrompt(false);
+              }}
+              style={{ width: "100%", background: "var(--c2)", border: passErr ? "1px solid #EF4444" : "1px solid var(--c1)", borderRadius: 6, padding: "8px 10px", color: "var(--t1)", fontSize: 14, fontFamily: "var(--mono)", boxSizing: "border-box", outline: "none" }}
+            />
+            {passErr && <div style={{ fontSize: 10, color: "#EF4444", marginTop: 6 }}>Incorrect password</div>}
+            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+              <button onClick={() => setShowPassPrompt(false)} style={{ flex: 1, background: "var(--c2)", border: "none", borderRadius: 6, padding: "8px", color: "var(--t3)", cursor: "pointer", fontSize: 12, fontFamily: "var(--mono)" }}>Cancel</button>
+              <button onClick={() => {
+                if (passInput === "acb151") { setShowPassPrompt(false); doRefresh(); }
+                else setPassErr(true);
+              }} style={{ flex: 1, background: "rgba(200,170,120,0.15)", border: "none", borderRadius: 6, padding: "8px", color: "#C8AA78", cursor: "pointer", fontSize: 12, fontFamily: "var(--mono)", fontWeight: 700 }}>Refresh</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PILLS */}
       <div style={{ padding: "10px 20px", display: "flex", gap: 6, flexShrink: 0, borderBottom: "1px solid var(--c1)" }}>
