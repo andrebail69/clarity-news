@@ -127,6 +127,10 @@ function extractJSON(text) {
 }
 
 export default async function handler(req, res) {
+  if (!req.headers['x-vercel-cron'] && req.query.key !== 'clarity2026') {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return res.status(500).json({ error: 'No API key configured' });
 
