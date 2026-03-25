@@ -169,8 +169,22 @@ function StoryScreen({ story: s, onBack }) {
         <SectionLabel>SIGNALS</SectionLabel>
         {s.resolution?.map((r, i) => (
           <div key={i} style={{ marginBottom: 20, paddingLeft: 16, borderLeft: "2px solid #C8AA78" }}>
-            <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--t1)", margin: "0 0 8px", fontFamily: "var(--body)", fontWeight: 500 }}>{r.indicator}</p>
-            <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--t2)", margin: 0, fontFamily: "var(--body)" }}>{r.meaning}</p>
+            <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--t1)", margin: "0 0 12px", fontFamily: "var(--body)", fontWeight: 500 }}>{r.watch || r.indicator}</p>
+            {r.if_yes && (
+              <div style={{ marginBottom: 10 }}>
+                <span style={{ fontSize: 11, color: "#22C55E", fontFamily: "var(--mono)", fontWeight: 700, letterSpacing: "0.05em" }}>IF YES</span>
+                <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--t2)", margin: "4px 0 0", fontFamily: "var(--body)" }}>{r.if_yes}</p>
+              </div>
+            )}
+            {r.if_no && (
+              <div>
+                <span style={{ fontSize: 11, color: "#EF4444", fontFamily: "var(--mono)", fontWeight: 700, letterSpacing: "0.05em" }}>IF NO</span>
+                <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--t2)", margin: "4px 0 0", fontFamily: "var(--body)" }}>{r.if_no}</p>
+              </div>
+            )}
+            {!r.if_yes && r.meaning && (
+              <p style={{ fontSize: 16, lineHeight: 1.7, color: "var(--t2)", margin: 0, fontFamily: "var(--body)" }}>{r.meaning}</p>
+            )}
           </div>
         ))}
       </div>

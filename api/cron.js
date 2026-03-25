@@ -34,9 +34,10 @@ LAYER 3 — OPEN QUESTIONS ("questions" field): Array of 2-3 genuinely unresolve
 - "question": The question stated plainly
 - "why": One substantial paragraph on why this is unresolved. Present the range of honest answers.
 
-LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable indicators. Each is an object:
-- "indicator": A specific event, data release, decision to watch for
-- "meaning": 2-3 sentences on what it would tell you.
+LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable signals. Each is an object:
+- "watch": What specifically to watch for — a specific event, data release, decision, or outcome. One clear sentence.
+- "if_yes": What it means if this happens or trends in one direction. 2-3 sentences explaining the implications and what it would confirm or undermine.
+- "if_no": What it means if it doesn't happen or trends the other direction. 2-3 sentences explaining the alternative implications.
 
 RULES:
 - No editorializing. No opinion. No bias. Present facts and connections.
@@ -59,7 +60,7 @@ RULES:
       {"question": "The question", "why": "Why it's unresolved"}
     ],
     "resolution": [
-      {"indicator": "Thing to watch", "meaning": "What it tells you"}
+      {"watch": "Specific thing to watch", "if_yes": "2-3 sentences on what this outcome would mean", "if_no": "2-3 sentences on what the alternative outcome would mean"}
     ]
   }
 ]`;
@@ -116,9 +117,10 @@ LAYER 3 — OPEN QUESTIONS ("questions" field): Array of 2-3 genuinely unresolve
 - "question": The question stated plainly
 - "why": One substantial paragraph on why this is unresolved.
 
-LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable indicators. Each is an object:
-- "indicator": A specific event, data release, decision to watch for
-- "meaning": 2-3 sentences on what it would tell you.
+LAYER 4 — SIGNALS ("resolution" field): Array of 2-4 specific, observable signals. Each is an object:
+- "watch": What specifically to watch for — a specific event, data release, decision, or outcome. One clear sentence.
+- "if_yes": What it means if this happens or trends in one direction. 2-3 sentences explaining the implications and what it would confirm or undermine.
+- "if_no": What it means if it doesn't happen or trends the other direction. 2-3 sentences explaining the alternative implications.
 
 RULES:
 - No editorializing. No opinion. No bias. Present facts and connections.
@@ -140,7 +142,7 @@ RULES:
       {"question": "The question", "why": "Why it's unresolved"}
     ],
     "resolution": [
-      {"indicator": "Thing to watch", "meaning": "What it tells you"}
+      {"watch": "Specific thing to watch", "if_yes": "2-3 sentences on what this outcome would mean", "if_no": "2-3 sentences on what the alternative outcome would mean"}
     ]
   }
 ]`;
