@@ -166,7 +166,7 @@ function StoryScreen({ story: s, onBack }) {
 
       {/* ── SIGNALS ── */}
       <div ref={signalsRef}>
-        <SectionLabel>SIGNALS</SectionLabel>
+        <SectionLabel>SIGNALS — WHAT TO WATCH</SectionLabel>
         {s.resolution?.map((r, i) => (
           <div key={i} style={{ marginBottom: 20, paddingLeft: 16, borderLeft: "2px solid #C8AA78" }}>
             <p style={{ fontSize: 17, lineHeight: 1.6, color: "var(--t1)", margin: "0 0 12px", fontFamily: "var(--body)", fontWeight: 500 }}>{r.watch || r.indicator}</p>
