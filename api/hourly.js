@@ -185,11 +185,10 @@ OR
     }
   }
 
-  // Save if any changes were made
+  // Always update fetchedAt so the app shows the scan ran, save regardless
   const hasBreaking = results.some(r => r.breaking);
-  if (hasBreaking) {
-    await saveBriefing(existing);
-  }
+  existing.fetchedAt = new Date().toISOString();
+  await saveBriefing(existing);
 
   return res.status(200).json({ success: true, hasBreaking, results });
 }
