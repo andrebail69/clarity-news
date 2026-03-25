@@ -111,7 +111,7 @@ export default async function handler(req, res) {
 Current stories in the briefing:
 ${currentHeadlines}
 
-Is there a breaking story that is MORE important than any of the current stories listed above? This must be genuinely major — a significant event, not routine news.
+Is there a breaking story that is MORE important than the LEAST important of the current stories listed above? This must be a significant new development — not routine news.
 
 Respond with ONLY valid JSON, no other text:
 {"breaking": true, "headline": "Brief headline of breaking story", "category": "${catId}"} 
