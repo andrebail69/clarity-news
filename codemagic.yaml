@@ -1,6 +1,6 @@
 workflows:
   ios-app-store:
-    name: Clarity iOS — App Store
+    name: Clarity iOS - App Store
     max_build_duration: 120
     instance_type: mac_mini_m2
 
