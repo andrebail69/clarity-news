@@ -261,7 +261,7 @@ export default function Clarity() {
           background: cat === "breaking" ? "#EF4444" : "var(--c2)",
           color: cat === "breaking" ? "#fff" : "#EF4444",
           border: "none", borderRadius: 20, padding: "8px 0", cursor: "pointer",
-          fontSize: 15, fontWeight: cat === "breaking" ? 700 : 400,
+          fontSize: 14, fontWeight: cat === "breaking" ? 700 : 400,
           fontFamily: "var(--body)", whiteSpace: "nowrap", textAlign: "center",
         }}>Breaking</button>
         {CATS.map(c => (
@@ -270,7 +270,7 @@ export default function Clarity() {
             background: cat === c.id ? "#C8AA78" : "var(--c2)",
             color: cat === c.id ? "#101114" : "var(--t3)",
             border: "none", borderRadius: 20, padding: "8px 0", cursor: "pointer",
-            fontSize: 15, fontWeight: cat === c.id ? 700 : 400,
+            fontSize: 14, fontWeight: cat === c.id ? 700 : 400,
             fontFamily: "var(--body)", whiteSpace: "nowrap", textAlign: "center",
           }}>{c.label}</button>
         ))}
